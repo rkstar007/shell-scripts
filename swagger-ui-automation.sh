@@ -1,7 +1,13 @@
 #!/bin/bash
 
-## Variable Definition
+## Exit Script if not arguments is passed 
+if [ $# -eq 0 ]; then
+    echo "No arguments provided. Please pass the all the arguments required for swagger ui automation"
+    echo "example : sh swagger-ui-automation.sh rktest-s3-bucket us-east-2 AEKCVSLKJHYTOFN *******"
+    exit 1
+fi
 
+## Variable Definition
 aws_s3_bucket=$1
 swagger_ui_version=$2
 region=$3
@@ -12,7 +18,6 @@ HNAME=`uname -n`
 LOGFILE="/var/log/swagger.log"
 
 ## FUNCTIONS
-
 CHECK()
 {
 if [ $? -eq 0 ]; then
@@ -45,7 +50,6 @@ export AWS_SECRET_ACCESS_KEY=${AWSSecretKey}
 CHECK 	
  
 ## Swagger-UI Creation Code
-
 sudo yum install curl -y 
 CHECK
 
