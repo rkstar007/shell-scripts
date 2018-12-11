@@ -3,27 +3,23 @@
 ## Exit Script if not arguments is passed 
 if [ $# -eq 0 ]; then
     echo "No arguments provided. Please pass the all the arguments required for swagger ui automation"
-    echo "example : sh swagger-ui-automation.sh rktest-s3-bucket us-east-2 AEKCVSLKJHYTOFN *******"
+    echo "example : sh swagger-ui-automation.sh rktest-s3-bucket v3.19.0 us-east-2"
     exit 1
 fi
 
 ## Variable Definition
-aws_s3_bucket=$1
-swagger_ui_version=$2
-region=$3
-AWSAccessKeyID=$4
-AWSSecretKey=$5
 DATE=`date +%Y-%m-%d`
 HNAME=`uname -n`
 LOGFILE="/var/log/swagger.log"
 
 ## FUNCTIONS
+
 CHECK()
 {
 if [ $? -eq 0 ]; then
         echo "Success"
 else
-        echo "Swagger UI setup process is failed for ${HNAME} on ${DATE}, so kindly check it manually for solution read last line of log file ${LOGFILE} this step is not exctued on server properly"
+        echo "Swagger UI setup process is failed for ${HNAME} on ${DATE}, so kindly check it manually for resolution by reading last line of log file ${LOGFILE}"
 	exit 1 
 fi
 
@@ -39,16 +35,44 @@ else
 fi
 }
 
+function usage()
+{
+echo "Help:-  `basename $0` -h"  
+}
+
+function help()
+{
+echo "Help:-  `basename $0` -h [Help] | -b <bucket_name> | -v <swagger_ui_version> | -r  <region>"  
+}
+
+## GetOPs function to passing multiple arguments in shell script.
+
+while getopts ":b:v:r:" opt; do
+  case "$opt" in
+   b | -bucket) bucket_name=$OPTARG ;;
+   v | -version) swagger_ui_version=$OPTARG ;;
+   r | -region) region=$OPTARG ;;
+   h) help
+      exit 0
+	  ;;
+  \?) echo "Unknown Option:-  " $OPTARG
+	  exit 1 
+	  ;;
+   :) echo "$OPTARG: - requires a value.please see help."
+	  exit 1
+	  ;;
+   *) usage
+	  echo "Invalid Argument is passed"
+esac
+done
+
+shift $(( OPTIND - 1 ))
+
 ## Calling Cleanup FUNCTIONS 
 /bin/echo -e "\e[1;32mCalling cleanup function\e[0m"
 Cleanup
 
-### Export Environment Variables ###
-export AWS_ACCESS_KEY_ID=${AWSAccessKeyID}
-CHECK
-export AWS_SECRET_ACCESS_KEY=${AWSSecretKey}
-CHECK 	
- 
+	 
 ## Swagger-UI Creation Code
 sudo yum install curl -y 
 CHECK
@@ -62,7 +86,7 @@ CHECK
 tar --strip-components 1 -C /tmp/swagger-ui -xf /tmp/swagger-ui.tar.gz 
 CHECK
 
-aws s3 sync --region ${region} --acl public-read /tmp/swagger-ui/dist s3://${aws_s3_bucket} --delete 
+aws s3 sync --region ${region} --acl public-read /tmp/swagger-ui/dist s3://${bucket_name} --delete 
 CHECK
 
 rm -rf  /tmp/swagger-ui
